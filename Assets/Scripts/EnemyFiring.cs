@@ -10,6 +10,8 @@ public class EnemyFiring : MonoBehaviour {
     public GameObject playerObject;
     public GameObject[] turrets;
 
+    public bool firing = true;
+
     // Use this for initialization
     void Start () {
 
@@ -29,11 +31,13 @@ public class EnemyFiring : MonoBehaviour {
         {
 
             yield return new WaitForSeconds(shotDelay);
-
-            for (int i = 0; i < turrets.Length; i++)
+            if (firing)
             {
-                GameObject lasers = (GameObject)GameObject.Instantiate(laserObject, turrets[i].transform.position, turrets[i].transform.rotation);
-                lasers.GetComponent<Laser>().Initialize(true, laserSpeed, accuracyOffset, laserDamage, playerObject.transform.position);
+                for (int i = 0; i < turrets.Length; i++)
+                {
+                    GameObject lasers = (GameObject)GameObject.Instantiate(laserObject, turrets[i].transform.position, turrets[i].transform.rotation);
+                    lasers.GetComponent<Laser>().Initialize(true, laserSpeed, accuracyOffset, laserDamage, playerObject.transform.position);
+                }
             }
             yield return null;
 

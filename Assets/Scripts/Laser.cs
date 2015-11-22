@@ -9,7 +9,8 @@ public class Laser : MonoBehaviour {
 	private float laserSpeed; //speed of laser
 	private float accuracyOffset; //accuracy offset 
 	private float laserDamage; //damage of laser
-    
+
+    public bool isAnna = false;
     private bool isEnemy = false; //Did the laser come from an enemy?
     
     private Vector3 targetLoc; //Ship the laser is targeting
@@ -38,7 +39,7 @@ public class Laser : MonoBehaviour {
         
       }
       
-      else {
+      else if (!isAnna){
       
         this.GetComponent<MeshRenderer>().material = friendlyLaser;
       

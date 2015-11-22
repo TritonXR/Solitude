@@ -1,0 +1,29 @@
+fileFormatVersion: 2
+guid: bf63e98bf45fe4adab95b360a702407e
+timeCreated: 1448187969
+licenseType: Pro
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - intro: {fileID: 8300000, guid: 104c96c8acde7465f8d7dbd7e91026a1, type: 3}
+  - combatTraining: {fileID: 8300000, guid: c48ba2a1a1c35408e88dc37538c13012, type: 3}
+  - plasma: {fileID: 8300000, guid: e8a9835040a5d43e3960f4ccf4be7e15, type: 3}
+  - anotherWave: {fileID: 8300000, guid: 99d2efa126af040468d0a7ed5979e3bd, type: 3}
+  - confirmed: {fileID: 8300000, guid: 2f3e0154fc3c449d5acf690f0e1fe490, type: 3}
+  - control: {fileID: 8300000, guid: bb3f3750f30c64f0791e090004f1e468, type: 3}
+  - disproval: {fileID: 8300000, guid: 9444926e804f54ff48b11e4ceeeeaf0a, type: 3}
+  - dilemma: {fileID: 8300000, guid: 50de12330fa4749519e7e184401711dc, type: 3}
+  - excellentChoice: {fileID: 8300000, guid: 03d27001859c74b95acf5e77e81cf7bb, type: 3}
+  - goingHome: {fileID: 8300000, guid: 07015ba5733364a59896a542917f0cf0, type: 3}
+  - humanPath: {fileID: 8300000, guid: f6ea99792052541bcaef0a6a5ba46431, type: 3}
+  - pilotMode: {fileID: 8300000, guid: be08bba9fab64415d889f40487c37efa, type: 3}
+  - repairingShip: {fileID: 8300000, guid: 20abf8751e8ed433096ae2354b73efa7, type: 3}
+  - annaTrust: {fileID: 8300000, guid: fac3713a1bb644379a750b6a78ded635, type: 3}
+  - sidedWithAnna: {fileID: 8300000, guid: cd3ab2ea2fdbe449fb570b10247ec3dd, type: 3}
+  - upgradeTutorial: {fileID: 8300000, guid: 783c97d62a8a54a6094a0a3a4dc01cd6, type: 3}
+  - targetDestroyed: {fileID: 8300000, guid: 9a817a704eb424a1ca1ebd99b59b1fc2, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -33,9 +33,18 @@ public class InputScript : MonoBehaviour
     //If disable, the player cannot manually move.
     public bool aiMoveEnabled = false;
 
+    //If active, Anna will attempt to mind control ships.
+    public bool controlActive = false;
+
+    //If active, targetted ships cannot fire.
+    public bool jammingActive = false;
+
+    public float mindControlDelay = 5f;
+    public float timeToControl = 5f;
+
     //The max number of targets in the array. If another is targetted, it will pop one from targetList.
     //Note that priorities are from 0 onward; Anna will first target ships at index 0, then 1, onwards.
-    int maxActiveTargets = 2;
+    int maxActiveTargets = 3;
     List<GameObject> targetList = new List<GameObject>();
 
     //The number of ships Anna can simultaneously attack.
@@ -45,12 +54,17 @@ public class InputScript : MonoBehaviour
     //public GameObject[] infoScreens;
 
     public Object laserObject;
+    public Object plasmaObject;
+
     public float laserSpeed = 25;
     public float laserDamage =34;
 
     public float aiShootDelay = 1;
 
     private bool currentlyShooting = false;
+
+    //First human upgrade.
+    public bool continuousLasers = false;
 
     // Use this for initialization
     void Start()
@@ -109,7 +123,7 @@ public class InputScript : MonoBehaviour
 
 
                 //If it got something, and it has health, set it as a target.
-                if (hit.transform != null && hit.transform.gameObject.GetComponent<HealthScript>() != null)
+                if (hit.transform != null && hit.transform.gameObject.GetComponent<Data>() != null)
                 {
                     //If we're at the list, shift everything over 1 and add the new one to the front.
                     if (targetList.Count >= maxActiveTargets)
@@ -151,6 +165,11 @@ public class InputScript : MonoBehaviour
 
                 GameObject lasers = (GameObject)GameObject.Instantiate(laserObject, shootPosition, grabPoints[i].transform.rotation);
                 lasers.GetComponent<Laser>().Initialize(false, laserSpeed, 0, laserDamage, grabPoints[i].transform.position + grabPoints[i].transform.forward * 50);
+
+                if (continuousLasers)
+                {
+                    StartCoroutine(autoFire(i));
+                }
             }
             //lastPositions[i] = m_hands[i].transform.position;
 
@@ -205,7 +224,7 @@ public class InputScript : MonoBehaviour
 
         while (targetList.Count != 0)
         {
-            Debug.Log(targetList.Count);
+            timeToControl -= aiShootDelay;
             yield return new WaitForSeconds(aiShootDelay);
 
             for (int i = 0; i < targetList.Count; i++)
@@ -214,15 +233,27 @@ public class InputScript : MonoBehaviour
                 while (i < targetList.Count && !targetList[i])
                 {
                     targetList.RemoveAt(i);
-                    //Maybe need to handle i going off edge?
                     yield return null;
                 }
+
+//                Debug.Log(timeToControl);
+                //First prioritize mind control.
+               /* if (controlActive && timeToControl < 0 && i < targetList.Count)
+                {
+                    Debug.Log("ALL YOUR BRAN IS BELONG TO US");
+                    timeToControl = mindControlDelay;
+                    targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                    targetList[i].AddComponent<ControlScript>();
+                    targetList[i].GetComponent<ControlScript>().Initialize(targetList);
+                    targetList.RemoveAt(i);
+
+                }*/
 
                 //If actively being shot, set target to red.
                 if (i < targetList.Count && i < concurrentTargets)
                 {
                     targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.red;
-                    GameObject lasers = (GameObject)GameObject.Instantiate(laserObject, this.transform.position, this.transform.rotation);
+                    GameObject lasers = (GameObject)GameObject.Instantiate(plasmaObject, this.transform.position, this.transform.rotation);
                     lasers.GetComponent<Laser>().Initialize(false, laserSpeed, 0, 100, targetList[i].transform.position);
                 }
 
@@ -232,8 +263,6 @@ public class InputScript : MonoBehaviour
                     targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.white;
                 }
                 yield return null;
-
-
             }
 
 
@@ -255,5 +284,18 @@ public class InputScript : MonoBehaviour
 
         }
         currentlyShooting = false;
+    }
+
+    IEnumerator autoFire(int handNum)
+    {
+        while (m_hands[handNum].m_controller.GetButton(SixenseButtons.BUMPER))
+        {
+            yield return new WaitForSeconds(.1f);
+
+            GameObject lasers = (GameObject)GameObject.Instantiate(laserObject, grabPoints[handNum].position, grabPoints[handNum].transform.rotation);
+            lasers.GetComponent<Laser>().Initialize(false, laserSpeed, 0, laserDamage, grabPoints[handNum].transform.position + grabPoints[handNum].transform.forward * 50);
+
+            yield return null;
+        }
     }
 }
