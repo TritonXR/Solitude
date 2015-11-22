@@ -44,6 +44,14 @@ public class InputScript : MonoBehaviour
     //An array of the cheat sheet and info screens.
     //public GameObject[] infoScreens;
 
+    public Object laserObject;
+    public float laserSpeed = 25;
+    public float laserDamage =34;
+
+    public float aiShootDelay = 1;
+
+    private bool currentlyShooting = false;
+
     // Use this for initialization
     void Start()
     {
@@ -79,7 +87,7 @@ public class InputScript : MonoBehaviour
             }
 
             //Handle Player Movement
-            if(moveEnabled && IsControllerActive(m_hands[i].m_controller) && (Mathf.Abs(SixenseInput.Controllers[i].JoystickX) > .05 || Mathf.Abs(SixenseInput.Controllers[i].JoystickY) > .05 ))
+            if (moveEnabled && IsControllerActive(m_hands[i].m_controller) && (Mathf.Abs(SixenseInput.Controllers[i].JoystickX) > .05 || Mathf.Abs(SixenseInput.Controllers[i].JoystickY) > .05))
             {
                 //Stores the vector for the force to be added to the ship.
                 //Add the forward and backward movements.
@@ -89,8 +97,6 @@ public class InputScript : MonoBehaviour
                 movementVector += grabPoints[i].transform.up * SixenseInput.Controllers[i].JoystickX;
 
                 movementVector *= Time.deltaTime * 5;
-
-                Debug.Log(movementVector.x + " " + movementVector.y + " " + movementVector.z);
                 transform.parent.transform.gameObject.GetComponent<Rigidbody>().AddForce(movementVector, ForceMode.Impulse);
 
             }
@@ -136,45 +142,56 @@ public class InputScript : MonoBehaviour
 
                 }
             }
+
+            //Handle Human Shooting
+            if (shootEnabled && IsControllerActive(m_hands[i].m_controller) && m_hands[i].m_controller.GetButtonDown(SixenseButtons.BUMPER))
+            {
+                Vector3 shootPosition = grabPoints[i].transform.position;
+                //shootPosition.z += 1;
+
+                GameObject lasers = (GameObject)GameObject.Instantiate(laserObject, shootPosition, grabPoints[i].transform.rotation);
+                lasers.GetComponent<Laser>().Initialize(false, laserSpeed, 0, laserDamage, grabPoints[i].transform.position + grabPoints[i].transform.forward * 50);
+            }
             //lastPositions[i] = m_hands[i].transform.position;
 
         }
 
         if (aiShootEnabled)
         {
-            aiShoot();
+            if (!currentlyShooting && targetList.Count != 0)
+            {
+                currentlyShooting = true;
+                StartCoroutine(annaFire());
+            }
         }
 
     }
 
-    void aiShoot()
-    {
-        for (int i =0; i < targetList.Count; i++)
-        {
-            //If some ships are destroyed, then shift the rest of the array left.
-            while (!targetList[i])
-            {
-                targetList.RemoveAt(i);
-                //Maybe need to handle i going off edge?
-            }
+    //void aiShoot()
+    //{
+    //    for (int i = 0; i < targetList.Count; i++)
+    //    {
+    //        //If some ships are destroyed, then shift the rest of the array left.
+    //        while (!targetList[i])
+    //        {
+    //            targetList.RemoveAt(i);
+    //            //Maybe need to handle i going off edge?
+    //        }
 
-            //If actively being shot, set target to red.
-            if (i < concurrentTargets)
-            {
-                Debug.Log(targetList[i].name);
+    //        //If actively being shot, set target to red.
+    //        if (i < concurrentTargets)
+    //        {
+    //            targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+    //        }
 
-                targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.red;
-            }
+    //        //Else set to white.
+    //        else
+    //        {
+    //            targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.white;
+    //        }
 
-            //Else set to white.
-            else
-            {
-                targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.white;
-
-            }
-
-        }
-    }
+    //    }
+    //}
 
 
     /** returns true if a controller is enabled and not docked */
@@ -183,28 +200,60 @@ public class InputScript : MonoBehaviour
         return (controller != null && controller.Enabled && !controller.Docked);
     }
 
-   /* IEnumerator bringToPlayer(Transform pulledObject, Transform hand, int handIndex)
+    IEnumerator annaFire()
     {
-        while (Vector3.Distance(pulledObject.position, hand.position) > 0.2)
-        {
 
-            if (m_hands[handIndex].m_controller.GetButtonUp(SixenseButtons.TRIGGER))
+        while (targetList.Count != 0)
+        {
+            Debug.Log(targetList.Count);
+            yield return new WaitForSeconds(aiShootDelay);
+
+            for (int i = 0; i < targetList.Count; i++)
             {
-                pulledObject.GetComponent<Rigidbody>().velocity = hand.transform.position - pulledObject.transform.position;
-                yield break;
+                //If some ships are destroyed, then shift the rest of the array left.
+                while (i < targetList.Count && !targetList[i])
+                {
+                    targetList.RemoveAt(i);
+                    //Maybe need to handle i going off edge?
+                    yield return null;
+                }
+
+                //If actively being shot, set target to red.
+                if (i < targetList.Count && i < concurrentTargets)
+                {
+                    targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+                    GameObject lasers = (GameObject)GameObject.Instantiate(laserObject, this.transform.position, this.transform.rotation);
+                    lasers.GetComponent<Laser>().Initialize(false, laserSpeed, 0, 100, targetList[i].transform.position);
+                }
+
+                //Else set to white.
+                else if (i < targetList.Count)  
+                {
+                    targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.white;
+                }
+                yield return null;
+
+
             }
 
-            float speed = 5;
-            float step = speed * Time.deltaTime;
-            pulledObject.position = Vector3.MoveTowards(pulledObject.position, hand.position, step);
+
+
+            /*for (int i = 0; i < targetList.Count && i < concurrentTargets; i++)
+            {
+                //If some ships are destroyed, then shift the rest of the array left.
+                while (!targetList[i])
+                {
+                    targetList.RemoveAt(i);
+                    //Maybe need to handle i going off edge?
+                }
+
+                GameObject lasers = (GameObject)GameObject.Instantiate(laserObject, this.transform.position, this.transform.rotation);
+                lasers.GetComponent<Laser>().Initialize(false, laserSpeed, 0, 1, targetList[i].transform.Find("AI Target").transform.position);
+            }*/
+
             yield return null;
+
         }
-
-        //Debug.Log(nearObjects[0].name);
-        pulledObject.transform.parent = hand;
-        grabbedObjects[handIndex] = pulledObject.transform;
-        grabbedObjects[handIndex].transform.localPosition = new Vector3(0, 0, grabbedObjectOffset);
-        grabbedObjects[handIndex].GetComponent<Rigidbody>().velocity = Vector3.zero;
-
-    }*/
+        currentlyShooting = false;
+    }
 }

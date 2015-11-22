@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 238a3ce6e8d0c40549e487e158c2ff7c
+timeCreated: 1448128902
+licenseType: Pro
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - friendlyLaser: {fileID: 2100000, guid: 6dd631b1775e84a5aa0642474c9fb4f6, type: 2}
+  - unfriendlyLaser: {fileID: 2100000, guid: b863b039a1b1d4f9ca5029e145070e2a, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
