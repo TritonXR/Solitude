@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class InputScript : MonoBehaviour
 {
+    public static InputScript iScript; 
     //NOTE ALL ARRAYS USE 0 AS LEFT AND 1 AS RIGHT.
 
     //The controllers, used to check if buttons are pressed and location.
@@ -36,19 +37,16 @@ public class InputScript : MonoBehaviour
     //If active, Anna will attempt to mind control ships.
     public bool controlActive = false;
 
-    //If active, targetted ships cannot fire.
-    public bool jammingActive = false;
-
     public float mindControlDelay = 5f;
     public float timeToControl = 5f;
 
     //The max number of targets in the array. If another is targetted, it will pop one from targetList.
     //Note that priorities are from 0 onward; Anna will first target ships at index 0, then 1, onwards.
-    int maxActiveTargets = 3;
+    public int maxActiveTargets = 3;
     List<GameObject> targetList = new List<GameObject>();
 
     //The number of ships Anna can simultaneously attack.
-    int concurrentTargets = 1;
+    public int concurrentTargets = 1;
 
     //An array of the cheat sheet and info screens.
     //public GameObject[] infoScreens;
@@ -56,7 +54,7 @@ public class InputScript : MonoBehaviour
     public Object laserObject;
     public Object plasmaObject;
 
-    public float laserSpeed = 25;
+    public float laserSpeed = 35;
     public float laserDamage =34;
 
     public float aiShootDelay = 1;
@@ -66,9 +64,15 @@ public class InputScript : MonoBehaviour
     //First human upgrade.
     public bool continuousLasers = false;
 
+    //SHIELDS
+    public GameObject leftShield;
+    public GameObject rightShield;
+
     // Use this for initialization
     void Start()
     {
+        iScript = this;
+
         m_hands = GetComponentsInChildren<SixenseHand>();
         grabPoints = new Transform[2];
         //grabbedObjects = new Transform[2];
@@ -101,7 +105,7 @@ public class InputScript : MonoBehaviour
             }
 
             //Handle Player Movement
-            if (moveEnabled && IsControllerActive(m_hands[i].m_controller) && (Mathf.Abs(SixenseInput.Controllers[i].JoystickX) > .05 || Mathf.Abs(SixenseInput.Controllers[i].JoystickY) > .05))
+          /*  if (moveEnabled && IsControllerActive(m_hands[i].m_controller) && (Mathf.Abs(SixenseInput.Controllers[i].JoystickX) > .05 || Mathf.Abs(SixenseInput.Controllers[i].JoystickY) > .05))
             {
                 //Stores the vector for the force to be added to the ship.
                 //Add the forward and backward movements.
@@ -113,7 +117,7 @@ public class InputScript : MonoBehaviour
                 movementVector *= Time.deltaTime * 5;
                 transform.parent.transform.gameObject.GetComponent<Rigidbody>().AddForce(movementVector, ForceMode.Impulse);
 
-            }
+            }*/
 
             //Handle AI Shooting
             if (aiShootEnabled && IsControllerActive(m_hands[i].m_controller) && m_hands[i].m_controller.GetButtonDown(SixenseButtons.TRIGGER))
@@ -129,15 +133,20 @@ public class InputScript : MonoBehaviour
                     if (targetList.Count >= maxActiveTargets)
                     {
                         //First deactivate target on the last element.
-                        targetList[targetList.Count - 1].transform.Find("Targetted").gameObject.SetActive(false);
-
+                        if (targetList[targetList.Count - 1].transform.Find("Targetted"))
+                        {
+                            targetList[targetList.Count - 1].transform.Find("Targetted").gameObject.SetActive(false);
+                        }
                         //Then shift everything over, so that the last element is overwritten if there is one.
                         for (int index = targetList.Count - 1; index > 0; index--)
                         {
                             targetList[index] = targetList[index - 1];
                         }
                         targetList[0] = hit.transform.gameObject;
-                        targetList[0].transform.Find("Targetted").gameObject.SetActive(true);
+                        if (targetList[targetList.Count - 1].transform.Find("Targetted"))
+                        {
+                            targetList[targetList.Count - 1].transform.Find("Targetted").gameObject.SetActive(true);
+                        }
                     }
 
                     else
@@ -148,7 +157,11 @@ public class InputScript : MonoBehaviour
                             targetList[index] = targetList[index - 1];
                         }
                         targetList.Insert(0, hit.transform.gameObject);
-                        targetList[0].transform.Find("Targetted").gameObject.SetActive(true);
+
+                        if (targetList[0].transform.Find("Targetted"))
+                        {
+                            targetList[0].transform.Find("Targetted").gameObject.SetActive(true);
+                        }
                     }
 
                     //StartCoroutine(bringToPlayer(hit.transform, grabPoints[i], i));
@@ -236,31 +249,37 @@ public class InputScript : MonoBehaviour
                     yield return null;
                 }
 
-//                Debug.Log(timeToControl);
+                //                Debug.Log(timeToControl);
                 //First prioritize mind control.
-               /* if (controlActive && timeToControl < 0 && i < targetList.Count)
-                {
-                    Debug.Log("ALL YOUR BRAN IS BELONG TO US");
-                    timeToControl = mindControlDelay;
-                    targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().enabled = false;
-                    targetList[i].AddComponent<ControlScript>();
-                    targetList[i].GetComponent<ControlScript>().Initialize(targetList);
-                    targetList.RemoveAt(i);
+                /* if (controlActive && timeToControl < 0 && i < targetList.Count)
+                 {
+                     Debug.Log("ALL YOUR BRAN IS BELONG TO US");
+                     timeToControl = mindControlDelay;
+                     targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                     targetList[i].AddComponent<ControlScript>();
+                     targetList[i].GetComponent<ControlScript>().Initialize(targetList);
+                     targetList.RemoveAt(i);
 
-                }*/
+                 }*/
 
                 //If actively being shot, set target to red.
                 if (i < targetList.Count && i < concurrentTargets)
                 {
-                    targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.red;
-                    GameObject lasers = (GameObject)GameObject.Instantiate(plasmaObject, this.transform.position, this.transform.rotation);
-                    lasers.GetComponent<Laser>().Initialize(false, laserSpeed, 0, 100, targetList[i].transform.position);
+                    if (targetList[i].transform.Find("Targetted"))
+                    {
+                        targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+                        GameObject lasers = (GameObject)GameObject.Instantiate(plasmaObject, this.transform.position, this.transform.rotation);
+                        lasers.GetComponent<Laser>().Initialize(false, laserSpeed, 0, 100, targetList[i].transform.position);
+                    }
                 }
 
                 //Else set to white.
-                else if (i < targetList.Count)  
+                else if (i < targetList.Count)
                 {
-                    targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.white;
+                    if (targetList[i].transform.Find("Targetted"))
+                    {
+                        targetList[i].transform.Find("Targetted").gameObject.GetComponent<SpriteRenderer>().color = Color.white;
+                    }
                 }
                 yield return null;
             }

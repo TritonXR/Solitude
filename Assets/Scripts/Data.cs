@@ -11,6 +11,8 @@ public class Data : MonoBehaviour
 
     private bool enemy = true; //is this an enemy?
 
+    private bool counted = false;
+
     // Use this for initialization
     void Start()
     {
@@ -48,8 +50,9 @@ public class Data : MonoBehaviour
         health -= value; //decrements health
 
         //if the ship drops below 0 health
-        if (health <= 0)
+        if (health <= 0 && !counted)
         {
+            counted = true;
             PlotScript.pScript.ReduceShipNumber();
             GameObject.Instantiate(explosion, this.transform.position, this.transform.rotation);
             GameObject.Destroy(this.gameObject);

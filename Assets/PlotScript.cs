@@ -3,6 +3,7 @@ using System.Collections;
 
 public class PlotScript : MonoBehaviour
 {
+
     public static PlotScript pScript;
 
     public GameObject playerShip;
@@ -14,19 +15,21 @@ public class PlotScript : MonoBehaviour
     public float finalWaveShips;
     public Object earthObject;
     public float earthToShipDistance;
+    public GameObject upgrades;
 
-    public Material shipMaterial;
+    public GameObject pSphere;
 
     private AudioSource audioSource;
     private Vector3[] shipSpawns;
     private int shipCount = 0;
 
-    public GameObject shipSphere;
+
 
     // Use this for initialization
     void Start()
     {
         pScript = this;
+
         audioSource = this.GetComponent<AudioSource>();
 
         StartCoroutine(Plot());
@@ -48,28 +51,36 @@ public class PlotScript : MonoBehaviour
         audioSource.clip = AudioController.Intro;
         audioSource.Play();
 
-        /*while (audioSource.isPlaying) {
+        while (audioSource.isPlaying)
+        {
 
-          yield return null;
+            yield return null;
 
-        }*/
+        }
 
         yield return new WaitForSeconds(2);
 
         SetPilotMode(true);
 
-        for (int i = 0; i < firstWaveShips; i++)
-        {
-            spawnShip();
-            yield return null;
-        }
-
         audioSource.clip = AudioController.CombatTraining;
         audioSource.Play();
 
-        while (shipCount > 0)
+        /*while (audioSource.isPlaying)
         {
 
+            yield return null;
+
+        }*/
+
+        for (int i = 0; i < firstWaveShips; i++)
+        {
+            spawnShip();
+            shipCount++;
+            yield return null;
+        }
+
+        while (shipCount > 0)
+        {
             yield return null;
 
         }
@@ -78,9 +89,20 @@ public class PlotScript : MonoBehaviour
         audioSource.clip = AudioController.Plasma;
         audioSource.Play();
 
+        /*while (audioSource.isPlaying)
+        {
+
+            yield return null;
+
+        }*/
+
+        SetPilotMode(true);
+
+
         for (int i = 0; i < secondWaveShips; i++)
         {
             spawnShip();
+            shipCount++;
             yield return null;
 
         }
@@ -97,31 +119,38 @@ public class PlotScript : MonoBehaviour
         audioSource.clip = AudioController.UpgradeTutorial;
         audioSource.Play();
 
-        /* Do a bunch of upgrade stuff. This is important! */
+        Vector3 upgradeSpawn = new Vector3(Camera.main.transform.position.x,
+                                           Camera.main.transform.position.y,
+                                           Camera.main.transform.position.z + 1);
 
-        while (audioSource.isPlaying)
+        GameObject upgradeSystem = (GameObject)GameObject.Instantiate(upgrades,
+                                    upgradeSpawn, this.transform.rotation);
+
+        while (!upgradeSystem.GetComponent<UpgradeSystem>().isDone())
         {
 
             yield return null;
 
         }
 
+        upgradeSystem.SetActive(false);
         audioSource.clip = AudioController.AnotherWave;
         audioSource.Play();
 
+        SetPilotMode(true);
+
         while (audioSource.isPlaying)
         {
 
             yield return null;
 
         }
-
-        SetPilotMode(true);
 
         for (int i = 0; i < bigWaveShips; i++)
         {
 
             spawnShip();
+            shipCount++;
             yield return null;
         }
 
@@ -131,7 +160,6 @@ public class PlotScript : MonoBehaviour
             yield return null;
 
         }
-
         audioSource.clip = AudioController.GoingHome;
         audioSource.Play();
 
@@ -169,25 +197,54 @@ public class PlotScript : MonoBehaviour
 
         }
 
-        bool choseAnna = false;
+        upgradeSystem.SetActive(true);
+
+        upgradeSpawn = new Vector3(Camera.main.transform.position.x,
+                                   Camera.main.transform.position.y,
+                                   Camera.main.transform.position.z + 1);
 
         /* Important choice goes here. VERY IMPORTANT! */
+        upgradeSystem.GetComponent<UpgradeSystem>().displayFinalOption();
+        upgradeSystem.transform.position = upgradeSpawn;
 
+        SetPilotMode(true);
+
+        while (!upgradeSystem.GetComponent<UpgradeSystem>().finalChoiceMade())
+        {
+
+            yield return null;
+
+        }
+
+        bool choseAnna = upgradeSystem.GetComponent<UpgradeSystem>().getEndChoice();
+        upgradeSystem.SetActive(false);
 
         if (choseAnna)
         {
 
             audioSource.clip = AudioController.AnnaTrust;
             audioSource.Play();
+            while (audioSource.isPlaying)
+            {
+
+                yield return null;
+
+            }
+
+            SetPilotMode(true);
 
             for (int i = 0; i < finalWaveShips; i++)
             {
                 spawnShip();
+                shipCount++;
                 yield return null;
             }
 
+            while (shipCount > 0)
+            {
+                yield return null;
 
-            yield return new WaitForSeconds(30);
+            }
 
             audioSource.clip = AudioController.SidedWithAnna;
             audioSource.Play();
@@ -199,10 +256,19 @@ public class PlotScript : MonoBehaviour
 
             audioSource.clip = AudioController.Disproval;
             audioSource.Play();
+            while (audioSource.isPlaying)
+            {
+
+                yield return null;
+
+            }
+
+            SetPilotMode(true);
 
             for (int i = 0; i < finalWaveShips; i++)
             {
                 spawnShip();
+                shipCount++;
                 yield return null;
             }
 
@@ -212,9 +278,7 @@ public class PlotScript : MonoBehaviour
                 yield return null;
 
             }
-
         }
-
     }
 
     void SetPilotMode(bool mode)
@@ -222,27 +286,25 @@ public class PlotScript : MonoBehaviour
 
         float transparency = 1;
 
-        //Show the world.
         if (mode)
         {
 
             audioSource.clip = AudioController.PilotMode;
             audioSource.Play();
-            transparency = 0;
-
-            shipSphere.SetActive(false);
+            //transparency = 0;
+            pSphere.SetActive(false);
 
         }
 
-        //Hide the world
         else
         {
-            shipSphere.SetActive(true);
+            pSphere.SetActive(true);
+
         }
 
-        /*Color changeColor = shipMaterial.color;
-        changeColor.a = transparency;
-        shipMaterial.SetColor("_Color", changeColor);*/
+        //Color changeColor = playerShip.GetComponent<MeshRenderer>().material.color;
+        //changeColor.a = transparency;
+        //playerShip.GetComponent<MeshRenderer>().material.SetColor ("_Color", changeColor);
 
     }
 
@@ -256,7 +318,6 @@ public class PlotScript : MonoBehaviour
 
     GameObject spawnShip()
     {
-        shipCount++;
 
         Vector3 spawnLocation = new Vector3(playerShip.transform.position.x + Random.Range(-shipSpawnDistance, shipSpawnDistance) * 2,
                                               playerShip.transform.position.y + Random.Range(-shipSpawnDistance, shipSpawnDistance) * 2,
